@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronograma Estratégico | Taquería Los Bros</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#E50914',
+                            redGlow: '#FF2E38',
+                            redDark: '#8B0000',
+                            bg: '#050507',
+                            card: '#0C0C10',
+                            cardBorder: 'rgba(255, 255, 255, 0.08)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Montserrat', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050507;
+            color: #F4F4F5;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, h4, h5, .font-heading {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(12, 12, 16, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .glass-card {
+            background: rgba(18, 18, 24, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(229, 9, 20, 0.4);
+            box-shadow: 0 10px 30px -10px rgba(229, 9, 20, 0.2);
+            transform: translateY(-3px);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #050507; }
+        ::-webkit-scrollbar-thumb { background: #27272A; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #E50914; }
+
+        /* Vue Transitions for Modals */
+        .modal-enter-active, .modal-leave-active {
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-enter-from, .modal-leave-to {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+        }
+        
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.3s ease;
+        }
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+
+        /* Background grid pattern */
+        .bg-grid-pattern {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen selection:bg-brand-red selection:text-white bg-grid-pattern relative">
+    
+    <!-- Luces de fondo ambientales -->
+    <div class="fixed top-0 left-0 w-[500px] h-[500px] bg-brand-red/10 rounded-full blur-[150px] pointer-events-none z-0"></div>
+    <div class="fixed bottom-0 right-0 w-[400px] h-[400px] bg-brand-redDark/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
+
+    <div id="app" class="pb-20 relative z-10" @keydown.esc="closeAllModals" tabindex="0">
+
+        <!-- Barra Superior de Aviso -->
+        <div class="bg-brand-red text-white text-xs sm:text-sm py-2.5 px-4 text-center flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 shadow-lg">
+            <span class="inline-flex items-center justify-center bg-black/40 text-white font-bold px-2.5 py-1 rounded-md text-[10px] uppercase tracking-wider border border-white/20">
+                <i class="fa-solid fa-video mr-1.5"></i> Día de Rodaje
+            </span>
+            <span class="font-medium text-white/90">Todos los <strong>Lunes</strong> grabamos el material de la semana en el local.</span>
+            <button @click="openShootStrategyModal = true" class="font-bold underline hover:text-white/80 transition decoration-white/50 underline-offset-2">Ver Estrategia</button>
+        </div>
+
+        <header class="glass-panel border-b border-brand-cardBorder relative shadow-2xl">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12 relative z-10">
+                <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+                    
+                    <div class="flex-1">
+                        <div class="flex flex-wrap items-center gap-3 mb-4">
+                            <span class="text-[10px] uppercase tracking-widest text-brand-red font-black border border-brand-red/40 bg-brand-red/10 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                                <i class="fa-solid fa-fire"></i> Plan Q2,000 / Mes
+                            </span>
+                            <span class="text-[10px] uppercase tracking-widest text-gray-300 font-bold border border-white/10 bg-white/5 px-3 py-1.5 rounded-full">
+                                Agencia de Marketing
+                            </span>
+                        </div>
+                        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-heading font-black text-white tracking-tight uppercase leading-[1.1]">
+                            Taquería Los Bros
+                            <span class="text-brand-red block mt-2 text-3xl sm:text-4xl">Cronograma Estratégico</span>
+                        </h1>
+                        <p class="text-gray-400 text-sm sm:text-base mt-4 max-w-2xl leading-relaxed border-l-2 border-brand-red pl-4">
+                            No subimos contenido al azar. Este es un plan de ataque diseñado para dar hambre, generar alcance local y atraer clientes. <strong class="text-white font-bold block mt-1">¡Tú ya no haces nada, solo te encargas de recibir a los clientes!</strong>
+                        </p>
+                    </div>
+
+                    <!-- Panel de Progreso Mensual -->
+                    <div class="bg-black/60 rounded-2xl p-5 sm:p-6 flex flex-col gap-4 shadow-xl border border-white/10 min-w-[300px] lg:min-w-[350px]">
+                        <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                            <div>
+                                <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Meta del Mes</div>
+                                <div class="text-sm font-black text-white mt-0.5">28 Videos + 16 Posts</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Estado</div>
+                                <div class="text-sm font-black text-brand-red mt-0.5">En Curso</div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between text-xs font-bold mb-2">
+                                <span class="text-gray-400">Progreso de Publicación</span>
+                                <span class="text-white">{{ completionPercentage }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-900 rounded-full h-2.5 overflow-hidden border border-white/5">
+                                <div class="bg-gradient-to-r from-brand-redDark to-brand-redGlow h-full rounded-full transition-all duration-1000 ease-out relative" :style="{ width: completionPercentage + '%' }">
+                                    <div class="absolute inset-0 bg-white/20 w-full h-full animate-pulse"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 lg:mt-12 relative z-10">
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 mb-10">
+                <div class="glass-card rounded-2xl p-5 border-t-2 border-t-brand-red">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Reels & TikTok</p>
+                            <h3 class="text-3xl font-black text-white mt-1 font-heading">28</h3>
+                        </div>
+                        <div class="w-10 h-10 bg-brand-red/15 rounded-xl text-brand-red flex items-center justify-center border border-brand-red/30">
+                            <i class="fa-brands fa-tiktok text-lg"></i>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-3 font-medium"><i class="fa-solid fa-bolt text-brand-red mr-1"></i>1 video diario</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-5 border-t-2 border-t-brand-red">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Posts / Gráficos</p>
+                            <h3 class="text-3xl font-black text-white mt-1 font-heading">16</h3>
+                        </div>
+                        <div class="w-10 h-10 bg-brand-red/15 rounded-xl text-brand-red flex items-center justify-center border border-brand-red/30">
+                            <i class="fa-brands fa-instagram text-lg"></i>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-3 font-medium"><i class="fa-solid fa-camera text-brand-red mr-1"></i>Días de alto tráfico</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-5 border-t-2 border-t-brand-red">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Días de Rodaje</p>
+                            <h3 class="text-3xl font-black text-white mt-1 font-heading">4</h3>
+                        </div>
+                        <div class="w-10 h-10 bg-brand-red/15 rounded-xl text-brand-red flex items-center justify-center border border-brand-red/30">
+                            <i class="fa-solid fa-video text-lg"></i>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-3 font-medium"><i class="fa-solid fa-calendar text-brand-red mr-1"></i>Asistencia presencial</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-5 border-t-2 border-t-brand-red">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Publicados</p>
+                            <h3 class="text-3xl font-black text-brand-red mt-1 font-heading">{{ publishedCount }} <span class="text-sm text-gray-500">/ {{ activities.length }}</span></h3>
+                        </div>
+                        <div class="w-10 h-10 bg-brand-red/15 rounded-xl text-brand-red flex items-center justify-center border border-brand-red/30">
+                            <i class="fa-solid fa-check-double text-lg"></i>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-3 font-medium">Contenidos al aire</p>
+                </div>
+            </div>
+
+            <div class="bg-black/40 backdrop-blur-md rounded-2xl p-5 mb-8 border border-white/10 no-print">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10">
+                    <div class="relative flex-1 max-w-xl">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                        <input 
+                            v-model="searchQuery" 
+                            type="text" 
+                            placeholder="Buscar guion, categoría (ej. Pastor, Meme, ASMR)..."
+                            class="w-full pl-11 pr-4 py-3 bg-black/80 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red placeholder-gray-600 transition-all"
+                        />
+                    </div>
+                    <button 
+                        @click="resetFilters" 
+                        class="px-5 py-3 text-xs font-bold text-gray-400 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl transition flex items-center justify-center gap-2 border border-white/5"
+                    >
+                        <i class="fa-solid fa-rotate-left"></i> Restablecer Filtros
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 pt-5">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">
+                            <i class="fa-solid fa-layer-group text-brand-red mr-1"></i> Bloque de Semana
+                        </label>
+                        <select v-model="selectedBlock" class="w-full bg-black/80 border border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-white focus:border-brand-red outline-none appearance-none cursor-pointer">
+                            <option :value="0">Todas las Semanas (Mes Completo)</option>
+                            <option :value="1">Semana 1: Atracción & Ubicación</option>
+                            <option :value="2">Semana 2: Menú & Antojo Visual</option>
+                            <option :value="3">Semana 3: Social Proof & Tendencia</option>
+                            <option :value="4">Semana 4: Fidelización & Experiencia</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">
+                            <i class="fa-solid fa-tags text-brand-red mr-1"></i> Categoría Principal
+                        </label>
+                        <select v-model="selectedCategory" class="w-full bg-black/80 border border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-white focus:border-brand-red outline-none appearance-none cursor-pointer">
+                            <option value="">Todas las Categorías</option>
+                            <option value="Ubicación">Ubicación / Cómo llegar</option>
+                            <option value="Menú">Menú & Antojo Visual</option>
+                            <option value="Experiencia">Experiencia / Local Lleno</option>
+                            <option value="Tendencia">Tendencia / Humor</option>
+                            <option value="Promocional">Promocional / Combos</option>
+                            <option value="ASMR">ASMR / Sonidos Reales</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">
+                            <i class="fa-solid fa-list-check text-brand-red mr-1"></i> Estado Actual
+                        </label>
+                        <select v-model="selectedStatus" class="w-full bg-black/80 border border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-white focus:border-brand-red outline-none appearance-none cursor-pointer">
+                            <option value="">Todos los Estados</option>
+                            <option value="Pendiente">Pendiente de Grabación</option>
+                            <option value="En Grabación">En Grabación (Lunes)</option>
+                            <option value="Editando">En Edición / Posproducción</option>
+                            <option value="Programado">Programado en App</option>
+                            <option value="Publicado">Publicado / Al aire</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-12">
+                <div v-for="blockNum in activeBlockNumbers" :key="blockNum" class="space-y-6">
+                    
+                    <!-- Encabezado de Semana -->
+                    <div class="bg-black/50 border border-white/5 p-5 rounded-2xl shadow-lg border-l-4 border-l-brand-red flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <span class="text-[10px] uppercase font-black text-brand-red tracking-widest bg-brand-red/10 px-2.5 py-1 rounded border border-brand-red/20">
+                                SEMANA {{ blockNum }}
+                            </span>
+                            <h2 class="text-xl sm:text-2xl font-heading font-black text-white mt-2">
+                                {{ getBlockTheme(blockNum) }}
+                            </h2>
+                        </div>
+                    </div>
+
+                    <!-- Grid de Días -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                        <div 
+                            v-for="item in getFilteredItemsByBlock(blockNum)" 
+                            :key="item.id"
+                            class="glass-card rounded-2xl flex flex-col justify-between overflow-hidden group cursor-pointer"
+                            :class="[
+                                item.dayName === 'Lunes' ? 'border-brand-red/40 bg-brand-red/5' : '',
+                                item.status === 'Publicado' ? 'opacity-70 grayscale-[30%]' : ''
+                            ]"
+                            @click="openItemModal(item)"
+                        >
+                            <!-- Barra superior de la tarjeta -->
+                            <div class="p-3.5 border-b border-white/10 flex items-center justify-between bg-black/60">
+                                <span class="px-2.5 py-1 rounded text-[10px] font-black uppercase tracking-wider" :class="item.dayName === 'Lunes' ? 'bg-brand-red text-white' : 'bg-white/10 text-gray-300'">
+                                    {{ item.dayName }}
+                                </span>
+                                
+                                <button 
+                                    @click.stop="cycleStatus(item)"
+                                    class="text-[10px] font-black px-2.5 py-1 rounded border transition-colors flex items-center gap-1.5"
+                                    :class="getStatusBadgeClass(item.status)"
+                                    title="Clic para cambiar estado rápido"
+                                >
+                                    <i class="fa-solid" :class="getStatusIcon(item.status)"></i>
+                                    {{ item.status }}
+                                </button>
+                            </div>
+
+                            <!-- Cuerpo de la tarjeta -->
+                            <div class="p-5 flex-1 flex flex-col gap-4">
+                                
+                                <!-- Etiquetas -->
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 bg-white/10 text-gray-300 rounded border border-white/10">
+                                        {{ item.category }}
+                                    </span>
+                                    <span v-if="item.dayName === 'Lunes'" class="text-[9px] font-black text-brand-red bg-brand-red/10 px-1.5 py-0.5 rounded uppercase flex items-center gap-1">
+                                        <i class="fa-solid fa-camera"></i> Rodaje
+                                    </span>
+                                </div>
+
+                                <!-- Contenido Video -->
+                                <div>
+                                    <div class="flex items-center gap-1.5 text-[10px] font-black text-brand-red uppercase tracking-wider mb-1">
+                                        <i class="fa-brands fa-tiktok"></i> Video (Reel/TikTok)
+                                    </div>
+                                    <h3 class="font-bold text-white text-sm leading-snug group-hover:text-brand-red transition-colors">
+                                        {{ item.videoTitle }}
+                                    </h3>
+                                    <p class="text-xs text-gray-400 mt-2 leading-relaxed line-clamp-2">
+                                        {{ item.videoDesc }}
+                                    </p>
+                                </div>
+
+                                <!-- Contenido Post (Si existe) -->
+                                <div v-if="item.hasPost" class="p-3 bg-black/40 rounded-xl border border-white/5 mt-auto">
+                                    <div class="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase mb-1">
+                                        <i class="fa-brands fa-instagram text-gray-300"></i> Post Gráfico
+                                    </div>
+                                    <p class="text-[11px] text-gray-500 font-medium leading-snug line-clamp-1">
+                                        {{ item.postDesc }}
+                                    </p>
+                                </div>
+                                <div v-else class="mt-auto"></div>
+
+                            </div>
+                            
+                            <!-- Botón inferior -->
+                            <div class="px-5 py-3 border-t border-white/5 bg-black/30 text-center">
+                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest group-hover:text-white transition-colors">Ver Detalles <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        
+        <!-- MODAL DE DETALLES DEL DÍA -->
+        <transition name="fade">
+            <!-- El modificador .self asegura que el clic en el fondo gris cierre el modal -->
+            <div v-if="selectedItem" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm no-print" @click.self="closeAllModals">
+                
+                <transition name="modal" appear>
+                    <div class="bg-[#0C0C10] rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-brand-red/30 flex flex-col relative">
+                        
+                        <!-- BOTÓN DE CIERRE ('X') ALTAMENTE VISIBLE Y FUNCIONAL -->
+                        <button 
+                            @click="closeAllModals" 
+                            class="absolute top-5 right-5 w-10 h-10 bg-black border border-white/20 rounded-full text-gray-300 hover:text-white hover:bg-brand-red hover:border-brand-red hover:rotate-90 transition-all duration-300 flex items-center justify-center z-[110] shadow-lg cursor-pointer"
+                            aria-label="Cerrar detalles"
+                        >
+                            <i class="fa-solid fa-xmark text-xl"></i>
+                        </button>
+
+                        <!-- Cabecera del Modal -->
+                        <div class="p-6 sm:p-8 border-b border-white/10 relative overflow-hidden bg-black/40">
+                            <!-- Glow effect -->
+                            <div class="absolute -top-10 -left-10 w-40 h-40 bg-brand-red/20 rounded-full blur-3xl pointer-events-none"></div>
+                            
+                            <div class="flex flex-wrap items-center gap-2 mb-3 relative z-10 pr-12">
+                                <span class="px-3 py-1 bg-brand-red text-white font-black text-[10px] uppercase tracking-widest rounded-md shadow-md">
+                                    {{ selectedItem.dayName }}
+                                </span>
+                                <span class="text-xs font-bold text-gray-400 bg-white/5 px-2 py-1 rounded border border-white/10">Semana {{ selectedItem.weekBlock }}</span>
+                                <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider ml-auto"><i class="fa-solid fa-tag text-brand-red"></i> {{ selectedItem.category }}</span>
+                            </div>
+                            <h3 class="text-2xl sm:text-3xl font-heading font-black text-white relative z-10 leading-tight pr-10">
+                                {{ selectedItem.videoTitle }}
+                            </h3>
+                        </div>
+
+                        <!-- Cuerpo del Modal -->
+                        <div class="p-6 sm:p-8 space-y-6 flex-1">
+                            
+                            <!-- Control de Estado -->
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-black rounded-xl border border-white/10">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">Estado de Producción:</span>
+                                <select v-model="selectedItem.status" @change="saveToLocalStorage" class="bg-[#121216] border border-white/20 rounded-lg text-xs font-bold text-white py-2.5 px-4 focus:outline-none focus:border-brand-red uppercase tracking-wider cursor-pointer transition-colors">
+                                    <option value="Pendiente">Pendiente de Grabar</option>
+                                    <option value="En Grabación">En Grabación (Rodaje)</option>
+                                    <option value="Editando">En Edición / Pospro</option>
+                                    <option value="Programado">Programado en Redes</option>
+                                    <option value="Publicado">Publicado (Al Aire)</option>
+                                </select>
+                            </div>
+
+                            <!-- Guion de Video -->
+                            <div class="bg-brand-red/5 p-5 rounded-xl border border-brand-red/30 relative">
+                                <div class="absolute top-0 left-0 w-1 h-full bg-brand-red rounded-l-xl"></div>
+                                <h4 class="text-xs font-black uppercase tracking-widest text-brand-red flex items-center gap-2 mb-3">
+                                    <i class="fa-brands fa-tiktok text-base"></i> Estrategia de Video Diario
+                                </h4>
+                                <p class="text-sm text-gray-300 leading-relaxed font-medium">
+                                    {{ selectedItem.videoDesc }}
+                                </p>
+                            </div>
+
+                            <!-- Apoyo Gráfico -->
+                            <div class="bg-white/5 p-5 rounded-xl border border-white/10">
+                                <h4 class="text-xs font-black uppercase tracking-widest text-gray-300 flex items-center gap-2 mb-3">
+                                    <i class="fa-brands fa-instagram text-base"></i> Apoyo Gráfico (Post / Stories)
+                                </h4>
+                                <p class="text-sm text-gray-400 leading-relaxed">
+                                    <template v-if="selectedItem.hasPost">
+                                        {{ selectedItem.postDesc }}
+                                    </template>
+                                    <template v-else>
+                                        <i class="fa-solid fa-ban text-gray-600 mr-1"></i> Este día la estrategia se concentra 100% en el video viral. No requiere post estático.
+                                    </template>
+                                </p>
+                            </div>
+
+                            <!-- Objetivos y Equipos -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="p-4 bg-black rounded-xl border border-white/5">
+                                    <h5 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">
+                                        <i class="fa-solid fa-bullseye text-brand-red mr-1"></i> Objetivo Psicológico
+                                    </h5>
+                                    <p class="text-xs text-gray-400 leading-relaxed">
+                                        {{ getCategoryObjective(selectedItem.category) }}
+                                    </p>
+                                </div>
+                                <div class="p-4 bg-black rounded-xl border border-white/5">
+                                    <h5 class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">
+                                        <i class="fa-solid fa-toolbox text-brand-red mr-1"></i> Equipo de Agencia
+                                    </h5>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span v-for="e in selectedItem.equipment" :key="e" class="bg-white/10 border border-white/10 text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider">
+                                            {{ e }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pie del Modal -->
+                        <div class="p-5 bg-black border-t border-white/10 flex justify-end rounded-b-3xl">
+                            <button @click="closeAllModals" class="px-8 py-3 bg-white/10 hover:bg-brand-red hover:border-brand-red border border-white/20 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-lg cursor-pointer">
+                                Cerrar Detalles
+                            </button>
+                        </div>
+                    </div>
+                </transition>
+            </div>
+        </transition>
+
+        <!-- MODAL DE ESTRATEGIA DE RODAJE -->
+        <transition name="fade">
+            <div v-if="openShootStrategyModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm no-print" @click.self="closeAllModals">
+                
+                <transition name="modal" appear>
+                    <div class="bg-[#0C0C10] rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-[0_0_50px_rgba(229,9,20,0.15)] border border-brand-red/40 space-y-6 relative overflow-hidden">
+                        
+                        <!-- Glow effect -->
+                        <div class="absolute -top-10 -left-10 w-40 h-40 bg-brand-red/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                        <!-- BOTÓN DE CIERRE -->
+                        <button 
+                            @click="closeAllModals" 
+                            class="absolute top-5 right-5 w-10 h-10 bg-black border border-white/20 rounded-full text-gray-300 hover:text-white hover:bg-brand-red hover:border-brand-red hover:rotate-90 transition-all duration-300 flex items-center justify-center z-[110] shadow-lg cursor-pointer"
+                        >
+                            <i class="fa-solid fa-xmark text-xl"></i>
+                        </button>
+
+                        <div class="flex items-center gap-4 border-b border-white/10 pb-5 relative z-10 pr-10">
+                            <div class="w-12 h-12 bg-brand-red/20 border border-brand-red/40 rounded-xl flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-video text-brand-red text-xl"></i>
+                            </div>
+                            <h3 class="text-xl sm:text-2xl font-heading font-black text-white uppercase leading-tight">
+                                Protocolo de Rodaje (Día Lunes)
+                            </h3>
+                        </div>
+
+                        <div class="space-y-5 text-sm text-gray-300 leading-relaxed relative z-10">
+                            <p class="bg-brand-red/10 border border-brand-red/30 p-4 rounded-xl font-medium text-white shadow-inner">
+                                <strong class="text-brand-red font-black uppercase">Eficiencia Total:</strong> Todos los lunes la agencia asiste al local. Durante 2-3 horas capturamos el 100% del material necesario para alimentar tus redes sociales toda la semana.
+                            </p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                                <div class="p-4 bg-black rounded-xl border border-white/10 hover:border-brand-red/30 transition-colors">
+                                    <h4 class="font-black text-white text-sm mb-2 flex items-center gap-2"><i class="fa-solid fa-fire text-brand-red"></i> La Parrilla & Pastor</h4>
+                                    <p class="text-xs text-gray-400">Cámaras 4K capturando el fuego, el corte de la carne y el armado de tacos. Puro <em>Food Porn</em>.</p>
+                                </div>
+                                <div class="p-4 bg-black rounded-xl border border-white/10 hover:border-brand-red/30 transition-colors">
+                                    <h4 class="font-black text-white text-sm mb-2 flex items-center gap-2"><i class="fa-solid fa-mobile-screen-button text-brand-red"></i> Recorridos Osmo</h4>
+                                    <p class="text-xs text-gray-400">Estabilizadores mecánicos para tomas fluidas del local, mostrando limpieza y ambiente.</p>
+                                </div>
+                                <div class="p-4 bg-black rounded-xl border border-white/10 hover:border-brand-red/30 transition-colors">
+                                    <h4 class="font-black text-white text-sm mb-2 flex items-center gap-2"><i class="fa-solid fa-users text-brand-red"></i> Prueba Social</h4>
+                                    <p class="text-xs text-gray-400">Tomas estratégicas del local lleno (con discreción) para demostrar que es el lugar de moda.</p>
+                                </div>
+                                <div class="p-4 bg-black rounded-xl border border-white/10 hover:border-brand-red/30 transition-colors">
+                                    <h4 class="font-black text-white text-sm mb-2 flex items-center gap-2"><i class="fa-solid fa-microphone text-brand-red"></i> Sonidos (ASMR)</h4>
+                                    <p class="text-xs text-gray-400">Uso de micrófonos para grabar el sonido crujiente de la plancha y el corte del cuchillo.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-right border-t border-white/10 pt-6 relative z-10">
+                            <button @click="closeAllModals" class="px-8 py-3 bg-brand-red hover:bg-brand-redGlow text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_5px_15px_rgba(229,9,20,0.4)] cursor-pointer">
+                                Excelente, Entendido
+                            </button>
+                        </div>
+                    </div>
+                </transition>
+            </div>
+        </transition>
+
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    selectedBlock: 0,
+                    selectedCategory: '',
+                    selectedStatus: '',
+                    searchQuery: '',
+                    selectedItem: null,
+                    openShootStrategyModal: false,
+                    // Plan Estratégico de 4 Semanas para Taquería (28 Videos, 16 Posts)
+                    activities: [
+                        // SEMANA 1: Atracción & Ubicación
+                        { id: 1, weekBlock: 1, dayName: 'Lunes', category: 'Ubicación', videoTitle: '¿Cómo llegar a Los Bros? (Guía)', videoDesc: 'Video dinámico con Osmo Pocket mostrando puntos de referencia desde calles principales hasta llegar a la taquería y ver el trompo girando.', hasPost: true, postDesc: 'Arte gráfico con mapa estilizado, horarios de atención y dirección.', equipment: ['Osmo Pocket', 'Cámara 4K'], status: 'Pendiente' },
+                        { id: 2, weekBlock: 1, dayName: 'Martes', category: 'Menú', videoTitle: 'Food Porn: El Corte del Pastor', videoDesc: 'Toma ultra cercana (Macro) en cámara lenta cortando la carne del trompo al pastor, la piña cayendo y armando el taco.', hasPost: false, postDesc: '', equipment: ['Cámara 4K', 'Luces LED'], status: 'Pendiente' },
+                        { id: 3, weekBlock: 1, dayName: 'Miércoles', category: 'Promocional', videoTitle: 'Promo Ombligo de Semana', videoDesc: 'Video rápido y atractivo anunciando la promoción de miércoles (ej. 3x2 en gringas o bebidas). Texto grande en pantalla.', hasPost: true, postDesc: 'Post del combo promocional diseñado para fácil lectura en WhatsApp/IG.', equipment: ['iPhone 4K'], status: 'Pendiente' },
+                        { id: 4, weekBlock: 1, dayName: 'Jueves', category: 'Menú', videoTitle: 'Detrás de la Barra: Las Salsas', videoDesc: 'El taquero muestra los tipos de salsas de la casa, sirviéndolas sobre unos tacos humeantes.', hasPost: false, postDesc: '', equipment: ['Cámara 4K'], status: 'Pendiente' },
+                        { id: 5, weekBlock: 1, dayName: 'Viernes', category: 'Tendencia', videoTitle: 'Humor: Cuando llega tu orden', videoDesc: 'Uso de audio en tendencia ("POV: Eres feliz") mostrando la cara de satisfacción cuando dejan los tacos en la mesa.', hasPost: true, postDesc: 'Fotografía premium de un plato de tacos: "¡Inicia el finde!"', equipment: ['iPhone 4K'], status: 'Pendiente' },
+                        { id: 6, weekBlock: 1, dayName: 'Sábado', category: 'Experiencia', videoTitle: 'Ambiente de Sábado en Los Bros', videoDesc: 'Tomas rápidas (tipo Hyperlapse) del local lleno, familias comiendo y el taquero despachando rápido.', hasPost: true, postDesc: 'Diseño invitando a venir a cenar hoy o pedir por delivery.', equipment: ['Osmo Pocket'], status: 'Pendiente' },
+                        { id: 7, weekBlock: 1, dayName: 'Domingo', category: 'ASMR', videoTitle: 'ASMR: El sonido de la plancha', videoDesc: 'Sin música, solo el sonido crujiente de la carne asándose, cebolla y cuchillos. Perfecto para el antojo de resaca.', hasPost: false, postDesc: '', equipment: ['Micrófono', 'Cámara 4K'], status: 'Pendiente' },
+
+                        // SEMANA 2: Variedad del Menú & Antojo Visual
+                        { id: 8, weekBlock: 2, dayName: 'Lunes', category: 'Menú', videoTitle: '¿Qué pedir la primera vez?', videoDesc: 'Un "Top 3" narrado: 1. Pastor, 2. Gringa Especial, 3. Bebida de Horchata. Excelente guía para clientes nuevos.', hasPost: true, postDesc: 'Diseño del Menú digital simplificado para historias destacadas.', equipment: ['Micrófono', 'Cámara 4K'], status: 'Pendiente' },
+                        { id: 9, weekBlock: 2, dayName: 'Martes', category: 'Menú', videoTitle: 'El Secreto: Nuestras Tortillas', videoDesc: 'Video enfocado en la calidad de la tortilla calentándose en la plancha con copia de grasa.', hasPost: false, postDesc: '', equipment: ['Cámara 4K'], status: 'Pendiente' },
+                        { id: 10, weekBlock: 2, dayName: 'Miércoles', category: 'Menú', videoTitle: 'Close Up: Gringas vs Quesadillas', videoDesc: 'Mostramos visualmente la diferencia y la cantidad de queso derretido separándose al morder.', hasPost: true, postDesc: 'Post interactivo: "¿Team Gringa o Team Tacos?".', equipment: ['Cámara 4K', 'Luces LED'], status: 'Pendiente' },
+                        { id: 11, weekBlock: 2, dayName: 'Jueves', category: 'Tendencia', videoTitle: 'Etiqueta al Bro que debe tacos', videoDesc: 'Video tipo meme muy visual para generar compartidos masivos e interacción en comentarios.', hasPost: false, postDesc: '', equipment: ['iPhone 4K'], status: 'Pendiente' },
+                        { id: 12, weekBlock: 2, dayName: 'Viernes', category: 'Promocional', videoTitle: 'Tacos de Asada (Fuego Máximo)', videoDesc: 'Tomas épicas de la parrilla con llamaradas (cámara lenta) anunciando el inicio del fin de semana.', hasPost: true, postDesc: 'Promoción especial para grupos grandes o cumpleañeros.', equipment: ['Cámara 4K'], status: 'Pendiente' },
+                        { id: 13, weekBlock: 2, dayName: 'Sábado', category: 'Experiencia', videoTitle: 'Las Aguas Frescas de la Casa', videoDesc: 'Tomas muy refrescantes sirviendo horchata/jamaica con mucho hielo. Choque térmico visual.', hasPost: true, postDesc: 'Foto del combo perfecto: Orden de Tacos + Bebida fría.', equipment: ['Cámara 4K', 'Luces LED'], status: 'Pendiente' },
+                        { id: 14, weekBlock: 2, dayName: 'Domingo', category: 'Tendencia', videoTitle: 'Reacciones Reales al Morder', videoDesc: 'Montaje de micro-reacciones de clientes probando el taco y asintiendo con satisfacción.', hasPost: false, postDesc: '', equipment: ['iPhone 4K'], status: 'Pendiente' },
+
+                        // SEMANA 3: Social Proof & Tendencia
+                        { id: 15, weekBlock: 3, dayName: 'Lunes', category: 'Ubicación', videoTitle: 'Proceso de Delivery Empaque', videoDesc: 'Mostrando cómo preparamos los empaques térmicos, asegurando que lleguen perfectos a tu casa.', hasPost: true, postDesc: 'Arte grande con números de WhatsApp para pedidos directos.', equipment: ['Osmo Pocket'], status: 'Pendiente' },
+                        { id: 16, weekBlock: 3, dayName: 'Martes', category: 'Tendencia', videoTitle: 'Trend: Expectativa vs Realidad', videoDesc: 'Expectativa: Un taco triste de la calle. Realidad: La montaña de carne que servimos en Taquería Los Bros.', hasPost: false, postDesc: '', equipment: ['iPhone 4K'], status: 'Pendiente' },
+                        { id: 17, weekBlock: 3, dayName: 'Miércoles', category: 'Menú', videoTitle: 'El Especial (Costra de Queso)', videoDesc: 'Presentación del platillo más instagrameable: Queso dorado en la plancha envolviendo la carne.', hasPost: true, postDesc: 'Carrusel de 3 fotos detallando los ingredientes del Especial.', equipment: ['Cámara 4K', 'Luces LED'], status: 'Pendiente' },
+                        { id: 18, weekBlock: 3, dayName: 'Jueves', category: 'Experiencia', videoTitle: 'El Ritmo de la Cocina (B-Roll)', videoDesc: 'Montaje rápido al ritmo de música urbana mostrando la velocidad de los taqueros picando carne.', hasPost: false, postDesc: '', equipment: ['Osmo Pocket', 'Cámara 4K'], status: 'Pendiente' },
+                        { id: 19, weekBlock: 3, dayName: 'Viernes', category: 'Promocional', videoTitle: 'Combo Familiar para el Finde', videoDesc: 'Mostramos visualmente el paquete por kilo (carne, tortillas, salsas, limones). ¡Cena resuelta!', hasPost: true, postDesc: 'Gráfico claro y directo con el precio del Combo Familiar.', equipment: ['Cámara 4K'], status: 'Pendiente' },
+                        { id: 20, weekBlock: 3, dayName: 'Sábado', category: 'ASMR', videoTitle: 'Moliendo la Salsa Verde (Sonido)', videoDesc: 'Sonido real de la licuadora o molcajete, sirviendo la salsa espesa en los platitos.', hasPost: true, postDesc: 'Reposteando historias reales de clientes que vinieron hoy (UGC).', equipment: ['Micrófono', 'Cámara 4K'], status: 'Pendiente' },
+                        { id: 21, weekBlock: 3, dayName: 'Domingo', category: 'Tendencia', videoTitle: 'Cuando dices: solo me como 3', videoDesc: 'Video cómico mostrando una torre de 10 platos vacíos después de prometer comer poco.', hasPost: false, postDesc: '', equipment: ['iPhone 4K'], status: 'Pendiente' },
+
+                        // SEMANA 4: Fidelización & Experiencia
+                        { id: 22, weekBlock: 4, dayName: 'Lunes', category: 'Experiencia', videoTitle: 'Limpieza y Apertura del Local', videoDesc: 'Transmite confianza mostrando la limpieza impecable de las mesas y preparación de ingredientes frescos.', hasPost: true, postDesc: 'Gráfico con los Horarios de apertura y cierre de la semana.', equipment: ['Osmo Pocket'], status: 'Pendiente' },
+                        { id: 23, weekBlock: 4, dayName: 'Martes', category: 'Tendencia', videoTitle: 'Reto: ¿Cuántos tacos compras con Q100?', videoDesc: 'Video narrado estilo reto demostrando todo lo que rinde el presupuesto en nuestro menú.', hasPost: false, postDesc: '', equipment: ['Micrófono', 'iPhone 4K'], status: 'Pendiente' },
+                        { id: 24, weekBlock: 4, dayName: 'Miércoles', category: 'Promocional', videoTitle: 'Promo Secreta para Seguidores', videoDesc: 'Menciona este video al cajero y llévate una bebida de cortesía. Para premiar a los que ven los videos.', hasPost: true, postDesc: 'Placa gráfica destacada de la promoción exclusiva para redes.', equipment: ['Cámara 4K'], status: 'Pendiente' },
+                        { id: 25, weekBlock: 4, dayName: 'Jueves', category: 'Menú', videoTitle: 'Zoom in: Cebollitas y Complementos', videoDesc: 'Los detalles importan. Mostramos cómo asamos las cebollitas y preparamos los limones.', hasPost: false, postDesc: '', equipment: ['Cámara 4K', 'Luces LED'], status: 'Pendiente' },
+                        { id: 26, weekBlock: 4, dayName: 'Viernes', category: 'Tendencia', videoTitle: 'El baile cuando llegan los tacos', videoDesc: 'Un mesero entregando la orden a un cliente que reacciona con un pequeño baile de felicidad.', hasPost: true, postDesc: 'Foto del equipo completo sonriendo: "¡Listos para servirles!"', equipment: ['iPhone 4K'], status: 'Pendiente' },
+                        { id: 27, weekBlock: 4, dayName: 'Sábado', category: 'Experiencia', videoTitle: 'A casa llena (Time Lapse)', videoDesc: 'Cámara fija grabando durante 30 minutos, resumido en 10 segundos, para ver cómo rotan las mesas.', hasPost: true, postDesc: 'Aviso: "¡Lleguen temprano, estamos a full!" o link de WhatsApp.', equipment: ['Cámara 4K Fija'], status: 'Pendiente' },
+                        { id: 28, weekBlock: 4, dayName: 'Domingo', category: 'Experiencia', videoTitle: 'Resumen del Mes: Gracias Bros', videoDesc: 'Montaje rápido y musical de las mejores tomas del mes, agradeciendo a la comunidad por la preferencia.', hasPost: false, postDesc: '', equipment: ['Edición Software'], status: 'Pendiente' }
+                    ]
+                };
+            },
+            mounted() {
+                // Recuperar estado guardado para persistencia en demostraciones
+                const savedData = localStorage.getItem('losbros_schedule_v2');
+                if (savedData) {
+                    try {
+                        this.activities = JSON.parse(savedData);
+                    } catch (e) {
+                        console.error('Error cargando datos locales', e);
+                    }
+                }
+                
+                // Listener global para ESC está en el template, pero agregamos redundancia
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') this.closeAllModals();
+                });
+            },
+            computed: {
+                activeBlockNumbers() {
+                    return this.selectedBlock === 0 ? [1, 2, 3, 4] : [this.selectedBlock];
+                },
+                filteredActivities() {
+                    return this.activities.filter(item => {
+                        const mBlock = this.selectedBlock === 0 || item.weekBlock === this.selectedBlock;
+                        const mCat = !this.selectedCategory || item.category === this.selectedCategory;
+                        const mStat = !this.selectedStatus || item.status === this.selectedStatus;
+                        
+                        const q = this.searchQuery.toLowerCase().trim();
+                        const mSearch = !q || 
+                            item.videoTitle.toLowerCase().includes(q) ||
+                            item.videoDesc.toLowerCase().includes(q) ||
+                            (item.postDesc && item.postDesc.toLowerCase().includes(q)) ||
+                            item.category.toLowerCase().includes(q);
+
+                        return mBlock && mCat && mStat && mSearch;
+                    });
+                },
+                publishedCount() {
+                    return this.activities.filter(a => a.status === 'Publicado').length;
+                },
+                completionPercentage() {
+                    if (!this.activities.length) return 0;
+                    return Math.round((this.publishedCount / this.activities.length) * 100);
+                }
+            },
+            methods: {
+                getBlockTheme(block) {
+                    const themes = {
+                        1: 'Atracción, Ubicación & Antojo Visual',
+                        2: 'Exploración del Menú & Tendencias',
+                        3: 'Social Proof, Combos & Dinamismo',
+                        4: 'Fidelización, Humor & Comunidad'
+                    };
+                    return themes[block] || '';
+                },
+                getFilteredItemsByBlock(blockNum) {
+                    return this.filteredActivities.filter(a => a.weekBlock === blockNum);
+                },
+                getStatusBadgeClass(status) {
+                    switch (status) {
+                        case 'Publicado': return 'bg-white/10 text-gray-400 border-gray-600';
+                        case 'Programado': return 'bg-green-900/30 text-green-400 border-green-500/50';
+                        case 'Editando': return 'bg-purple-900/30 text-purple-400 border-purple-500/50';
+                        case 'En Grabación': return 'bg-brand-red/20 text-brand-red border-brand-red/50';
+                        default: return 'bg-black text-gray-500 border-gray-700';
+                    }
+                },
+                getStatusIcon(status) {
+                    switch (status) {
+                        case 'Publicado': return 'fa-solid fa-circle-check text-gray-500';
+                        case 'Programado': return 'fa-solid fa-clock text-green-400';
+                        case 'Editando': return 'fa-solid fa-laptop-code text-purple-400';
+                        case 'En Grabación': return 'fa-solid fa-camera text-brand-red';
+                        default: return 'fa-regular fa-hourglass-half text-gray-500';
+                    }
+                },
+                cycleStatus(item) {
+                    const st = ['Pendiente', 'En Grabación', 'Editando', 'Programado', 'Publicado'];
+                    item.status = st[(st.indexOf(item.status) + 1) % st.length];
+                    this.saveToLocalStorage();
+                },
+                openItemModal(item) {
+                    this.selectedItem = item;
+                    // Prevenir scroll en el body
+                    document.body.style.overflow = 'hidden';
+                },
+                closeAllModals() {
+                    this.selectedItem = null;
+                    this.openShootStrategyModal = false;
+                    // Restaurar scroll
+                    document.body.style.overflow = '';
+                },
+                getCategoryObjective(category) {
+                    const obj = {
+                        'Ubicación': 'Eliminar barreras de compra facilitando la llegada física al local.',
+                        'Menú': 'Despertar apetito extremo (Food Porn) para generar visitas inmediatas.',
+                        'Experiencia': 'Prueba Social: Local lleno atrae más gente (Mente del consumidor).',
+                        'Tendencia': 'Aumentar alcance orgánico masivo y humanizar la marca con humor.',
+                        'Promocional': 'Llamado a la acción (CTA) directo para concretar ventas y pedidos hoy.',
+                        'ASMR': 'Retención visual altísima. El sonido genera reacciones físicas de hambre.'
+                    };
+                    return obj[category] || 'Atraer interacciones y posicionar la marca en top of mind.';
+                },
+                resetFilters() {
+                    this.selectedBlock = 0;
+                    this.selectedCategory = '';
+                    this.selectedStatus = '';
+                    this.searchQuery = '';
+                },
+                saveToLocalStorage() {
+                    localStorage.setItem('losbros_schedule_v2', JSON.stringify(this.activities));
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
